@@ -1,22 +1,31 @@
-
 openapi: 3.0.0
 
 paths:
-  /user/{userId}:
+  /movie/{movie_id}:
     get:
-      summary: This endpoint returns a user
+      summary: Nos devuelve una pelicula; incluyendo su nombre, su año de estreno, y tres de sus actores principales
       parameters:
-        - name: userId
+        - name: movie_id
           in: path
           required: true
-          description: user ID
+          description: ID de la pelicula
+        - in: query
+          name: date
+          required: false
+          description: date
       x-amazon-apigateway-integration:
         type: "aws_proxy"
         uri:
-          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:getUser/invocations"
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:getMovieInfo/invocations"
         httpMethod: "POST"
+   
     put:
-      summary: This endpoint saves a user
+      summary: Crea una nueva pelicula con todos los datos mencionados anteriormente
+      parameters:
+        - name: movie_id
+          in: path
+          required: true
+          description: ID de la pelicula
       requestBody:
         required: true
         content:
@@ -24,17 +33,129 @@ paths:
             schema:
               type: object
               properties:
-                user_id:
+                title:
                   type: string
-                age:
+                main_actor_01:
                   type: string
-                name:
+                main_actor_02:
                   type: string
-                last_name:
+                main_actor_03:
+                  type: string
+                year:
                   type: string
       x-amazon-apigateway-integration:
         type: "aws_proxy"
         uri:
-          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:putUser/invocations"
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:putMovieInfo/invocations"
         httpMethod: "POST"
-      httpMethod: "POST"
+
+  /movie/{movie_id}/cinema_room/{cinema_room_id}:
+    get:
+      summary: Dados una pelicula y una sala de cine, mostrar el horario de reproduccion de las peliculas
+      parameters:
+        - name: movie_id
+          in: path
+          required: true
+          description: movie ID
+        - name: cinema_room_id
+          in: path
+          required: true
+          description: cinema room ID
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:getMovieByRoom/invocations"
+        httpMethod: "POST"
+  
+  /cinema_room/{cinema_room_id}:
+    get:
+      summary: Nos devuelve
+      parameters:
+        - name: cinema_room_id
+          in: path
+          required: true
+          description: cinema room ID
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:getCinemaRoomInfo/invocations"
+        httpMethod: "POST"
+        
+    put:
+      summary: Crea la informacion de una sala de cine
+      parameters:
+        - name: cinema_room_id
+          in: path
+          required: true
+          description: cinema room ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                room:
+                  type: string
+                2D:
+                  type: string
+                3D:
+                  type: string
+                number_Seats:
+                  type: string
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:putCinemaRoomInfo/invocations"
+        httpMethod: "POST"
+        
+  /viewer/{viewer_id}:
+    get:
+      summary: Retorna la informacion de un usario y todas las peliculas que vio
+      parameters:
+        - name: viewer_id
+          in: path
+          required: true
+          description: viewer ID
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:getViewerInfo/invocations"
+        httpMethod: "POST"
+    put:
+      summary: Crea la informacion de una sala de cine
+      parameters:
+        - name: viewer_id
+          in: path
+          required: true
+          description: viewer id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                age:
+                  type: string
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:putViewerInfo/invocations"
+        httpMethod: "POST"
+        
+/date/{date_id}:
+    get:
+      summary: Retorna la informacion de algun dia de la semana
+      parameters:
+        - name: date_id
+          in: path
+          required: true
+          description: date ID
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:getDateInfo/invocations"
+        httpMethod: "POST"

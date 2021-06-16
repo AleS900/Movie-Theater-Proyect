@@ -3,79 +3,161 @@ AWSTemplateFormatVersion : '2010-09-09'
 Transform:
   - AWS::Serverless-2016-10-31
 
-Description: My Lambda Resources
+Description: My movie theater template
 Resources:
-  MyLambdaRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: user-lambda-role-upb
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-            - lambda.amazonaws.com
-          Action:
-          - sts:AssumeRole
-      Path: "/"
-      Policies:
-      - PolicyName: my-lambda-policy
-        PolicyDocument:
-          Version: '2012-10-17'
-          Statement:
-          - Effect: Allow
-            Action:
-            - logs:CreateLogGroup
-            - logs:CreateLogStream
-            - logs:PutLogEvents
-            Resource: arn:aws:logs:*:*:*
-          - Effect: Allow
-            Action:
-            - dynamodb:GetItem
-            Resource: "arn:aws:dynamodb:*:*:table/my-users-app-3"
 
-  GetUserFunction:
+  GetMovieInfo:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: getUser
+      FunctionName: getMovieInfo
       Environment:
         Variables:
-          USERS_TABLE: !Ref MyUsersTable
-      Handler: users.getUser
+          USERS_TABLE: !Ref Cinema_Theater
+      Handler: movies.getMovieInfo
       Runtime: python3.6
       CodeUri: package/
-      Role: !GetAtt MyLambdaRole.Arn
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref Cinema_Theater
       Events:
-        GetUsers:
+        GetMovie:
           Type: Api
           Properties:
             RestApiId: !Ref MyAPI
-            Path: "/user/{userId}"
+            Path: "/movie/{movie_id}"
             Method: GET
 
-  PutUserFunction:
+  PutMovieInfo:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: putUser
+      FunctionName: putMovieInfo
       Environment:
         Variables:
-          USERS_TABLE: !Ref MyUsersTable
-      Handler: users.putUser
+          USERS_TABLE: !Ref Cinema_Theater
+      Handler: movies.putMovieInfo
       Runtime: python3.6
       CodeUri: package/
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref Cinema_Theater
       Events:
-        GetUsers:
+        PutMovie:
           Type: Api
           Properties:
             RestApiId: !Ref MyAPI
-            Path: /user
+            Path: "/movie/{movie_id}"
             Method: PUT
+  
+  GetMovieByRoom:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: getMovieByRoom
+      Environment:
+        Variables:
+          USERS_TABLE: !Ref Cinema_Theater
+      Handler: movies.getMovieByRoom
+      Runtime: python3.6
+      CodeUri: package/
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref Cinema_Theater
+      Events:
+        PutMovie:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MyAPI
+            Path: "/movie/{movie_id}/cinema_room/{cinema_room_id}"
+            Method: GET
 
+  GetCinemaRoomInfo:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: getCinemaRoomInfo
+      Environment:
+        Variables:
+          USERS_TABLE: !Ref Cinema_Theater
+      Handler: movies.getCinemaRoomInfo
+      Runtime: python3.6
+      CodeUri: package/
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref Cinema_Theater
+      Events:
+        GetMovie:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MyAPI
+            Path: "/cinema_room/{cinema_room_id}"
+            Method: GET
+            
+    PutCinemaRoomInfo:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: putMovieInfo
+      Environment:
+        Variables:
+          USERS_TABLE: !Ref Cinema_Theater
+      Handler: movies.putMovieInfo
+      Runtime: python3.6
+      CodeUri: package/
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref Cinema_Theater
+      Events:
+        PutMovie:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MyAPI
+            Path: "/movie/{movie_id}"
+            Method: PUT
+            
+  GetViewerInfo:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: getViewerInfo
+      Environment:
+        Variables:
+          USERS_TABLE: !Ref Cinema_Theater
+      Handler: movies.getViewerInfo
+      Runtime: python3.6
+      CodeUri: package/
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref Cinema_Theater
+      Events:
+        GetMovie:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MyAPI
+            Path: "/viewer/{viewer_id}"
+            Method: GET
+            
+  GetDateInfo:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: getDateInfo
+      Environment:
+        Variables:
+          USERS_TABLE: !Ref Cinema_Theater
+      Handler: movies.getDateInfo
+      Runtime: python3.6
+      CodeUri: package/
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref Cinema_Theater
+      Events:
+        GetMovie:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MyAPI
+            Path: "/date/{date_id}"
+            Method: GET
+
+            
   MyAPI:
     Type: AWS::Serverless::Api
     Properties:
-      Name: my-api-gateway
+      Name: gateway-mt
       StageName: prod
       DefinitionBody:
         Fn::Transform:
@@ -83,10 +165,10 @@ Resources:
           Parameters:
             Location: swagger.yaml
 
-  MyUsersTable:
+  Cinema_Theater:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: my-users-app-3
+      TableName: Cinema_Theater
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
